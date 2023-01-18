@@ -9,7 +9,7 @@ const inst = axios.create({
 })
 
 
-let slashcommands = [
+var slashcommands = [
     {
         "name": "echo",
         "type": 1,
@@ -31,8 +31,22 @@ let slashcommands = [
         "options": [
             {
                 "name": "retvalue",
-                "description": "thiss is the thing that will return to console",
+                "description": "this is the thing that will return to console",
                 "type": 3,
+                "required": true
+            },
+    
+        ]
+    },
+    {
+        "name": "nowplayingchannel",
+        "type": 1,
+        "description": 'Selects a channel to send the "Now Playing on Environmental" messages.',
+        "options": [
+            {
+                "name": "retvalue",
+                "description": "The channel in which to send aformentioned messages.",
+                "type": 7,
                 "required": true
             },
     
@@ -49,12 +63,12 @@ for (let i = 0; i < slashcommands.length; i++) {
 
 
 
-let hbresponse = {
+var hbresponse = {
 	"op": 1,
 	"d": 251
 };
 
-let identify = 
+var identify = 
     {
         "op": 2,
         "d": {
@@ -69,9 +83,9 @@ let identify =
     }
 
 
-let socket = new WebSocket("wss://gateway.discord.gg/?v=10&encoding=json");
+var socket = new WebSocket("wss://gateway.discord.gg/?v=10&encoding=json");
 
-let heartbeat = undefined;
+var heartbeat = undefined;
 
 socket.on("message", (e) => {
 
@@ -95,9 +109,8 @@ socket.on("message", (e) => {
 
 
 
-        if (JSON.parse(e.toString()).d.data.name = "echo") {
+        if (JSON.parse(e.toString()).d.data.name == "echo") {
             var contents = JSON.parse(e.toString()).d.data.options
-            console.log(contents[0].value)
             var token = JSON.parse(e.toString()).d.token
             var id = JSON.parse(e.toString()).d.id
 
@@ -114,7 +127,7 @@ socket.on("message", (e) => {
 
         }
 
-        else if (JSON.parse(e.toString()).d.data.name = "debug") {
+        else if (JSON.parse(e.toString()).d.data.name == "debug") {
             var contents = JSON.parse(e.toString()).d.data.options
             console.log(contents)
             var token = JSON.parse(e.toString()).d.token
@@ -132,6 +145,26 @@ socket.on("message", (e) => {
             inst.post(endpoint, message)
 
         }
+
+        else if (JSON.parse(e.toString()).d.data.name == "nowplayingchannel") {
+            var contents = JSON.parse(e.toString()).d.data.options
+            console.log(contents)
+            var token = JSON.parse(e.toString()).d.token
+            var id = JSON.parse(e.toString()).d.id
+
+            var endpoint = `/interactions/${id}/${token}/callback`
+
+            var message = {
+                "type": 4,
+                "data": {
+                    "content": "Thanks for the input!"
+                }
+            }
+
+            inst.post(endpoint, message)
+
+        }
+
 
 
     }
