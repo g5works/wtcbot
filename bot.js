@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { WebSocketServer } = require("ws");
 const WebSocket = require("ws")
+const fs = require("fs")
 
 const inst = axios.create({
     baseURL: 'https://discord.com/api/v10',
@@ -44,9 +45,23 @@ var slashcommands = [
         "description": 'Selects a channel to send the "Now Playing on Environmental" messages.',
         "options": [
             {
-                "name": "retvalue",
+                "name": "channel",
                 "description": "The channel in which to send aformentioned messages.",
                 "type": 7,
+                "required": true
+            },
+    
+        ]
+    },
+    {
+        "name": "togglenowplaying",
+        "type": 1,
+        "description": 'Selects a channel to send the "Now Playing on Environmental" messages.',
+        "options": [
+            {
+                "name": "state",
+                "description": "State to set the muzak system into (on or off)",
+                "type": 5,
                 "required": true
             },
     
@@ -59,6 +74,7 @@ for (let i = 0; i < slashcommands.length; i++) {
 }
 
 
+var filecontents = JSON.parse(fs.readFileSync("serverconfigs.json").toString())
 
 
 
@@ -146,9 +162,10 @@ socket.on("message", (e) => {
 
         }
 
-        else if (JSON.parse(e.toString()).d.data.name == "nowplayingchannel") {
+        else if (JSON.parse(e.toString()).d.data.name == "togglenowplaying") {
             var contents = JSON.parse(e.toString()).d.data.options
-            console.log(contents)
+            var guildid = JSON.parse(e.toString()).d.guild_id
+            console.log(JSON.parse(e.toString()))
             var token = JSON.parse(e.toString()).d.token
             var id = JSON.parse(e.toString()).d.id
 
@@ -157,14 +174,61 @@ socket.on("message", (e) => {
             var message = {
                 "type": 4,
                 "data": {
-                    "content": "Thanks for the input!"
+                    "content": `The channel <#${contents[0].value}> has been set as the "Now Playing" channel of this guild.` 
                 }
             }
 
             inst.post(endpoint, message)
 
-        }
+            var entry = {
+                guildid: `${guildid}`,
+                nowPlayingCHID: `${contents[0].value}`,
+                enabled: true
+            }
 
+            var dupe = false;
+            
+
+            for (let i = 0; i < filecontents.length; i++) {
+
+
+
+                
+
+                if (filecontents[i].guildid == guildid && filecontents[i].nowPlayingCHID != contents[0].value) {
+                    filecontents[i].nowPlayingCHID = contents[0].value
+                    filecontents[i].enabled = true
+                    dupe = true
+                }
+
+                if (dupe == false && filecontents[i].guildid == guildid && filecontents[i].nowPlayingCHID == contents[0].value) {
+                    filecontents[i].enabled = true
+                    dupe = true;
+                }
+
+
+                // if (filecontents[i].guildid != guildid && filecontents[i].nowPlayingCHID != contents[0].value && dupe != true) {
+                    
+                // }
+
+                
+
+            }
+
+            if (dupe != true) {
+                filecontents.push(entry)
+            }
+
+            
+            
+       
+            fs.writeFileSync("serverconfigs.json", JSON.stringify(filecontents))
+
+
+
+            
+
+        }
 
 
     }
